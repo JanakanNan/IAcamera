@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Camera</title>
+</head>
+    <img id="image">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.3.0/socket.io.js"></script>
+
+    <script>
+        const socket = io.connect('http://172.16.8.47:3000');
+        socket.on('image', (image) => {
+            console.log(image);
+            const imageElm = document.getElementById('image');
+            imageElm.src = `data:image/jpeg;base64, ${image}`;
+        });
+    </script>
+Hello
+<body>
+
+</body>
+</html>
