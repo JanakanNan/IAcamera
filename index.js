@@ -4,6 +4,7 @@ const express = require('express');
 const app = express();
 const server = require('http').createServer(app);
 const io = require('socket.io')(server);
+const {drawBlueRect} = require('./asist');
 
 io.on('connection', function (socket) {
     console.log("client connecter");
@@ -19,12 +20,28 @@ app.get('/', (req,res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
 });
 
+getClassifier = async (frame) => {
+    const classifier = new cv.CascadeClassifier(cv.HAAR_FRONTALFACE_ALT);
+    try {
+        return await classifier.detectMultiScaleAsync(frame.bgrToGray());
+    } catch (e) {
+        console.log(e.message);
+    }
+};
+
 setInterval(() => {
     const frame = wCap.read();
-    const image = cv.imencode('.jpg', frame).toString('base64');
-    io.emit('image', image);
-    //console.log(image);
-}, 1000 / FPS)
+    getClassifier(frame).then((res) => {
+        // draw detection
+        const numDetectionsTh = 10;
+        res.objects.forEach((rect, i) => {
+            const thickness = res.numDetections[i] < numDetectionsTh ? 1 : 2;
+            drawBlueRect(frame, rect, { thickness });
+        });
+        const image = cv.imencode('.jpg', frame).toString('base64');
+        io.emit('image', image);
+    });
+}, 1000 / FPS);
 
 
 server.listen(3000);
